@@ -1,72 +1,105 @@
-# Linux Firewall from Scratch: Architecture & Concepts
+# Linux Firewall from Scratch: Architecture & Rationale
 
 ### Stateless vs. Stateful Firewalls
 
-| Firewall Type | Core Characteristic | Behavior |
-| --- | --- | --- |
-| **Stateless** | Isolated Evaluation | Blindly follows rule tables. Does not remember outgoing requests, making it susceptible to masked attacks. |
-| **Stateful** | Context-Aware | Remembers connection states. Infers context from active conversations to prevent attacks. |
+* **Stateless firewalls** blindly follow the rules of the hash table and do not remember outgoing requests, making them susceptible to masked attacks.
+* **Stateful firewalls** are context-aware, remember things, and infer through them to prevent attacks.
+
+> **WHY we use both:** A modern firewall does not choose one or the other; it uses them in a pipeline. We use Stateless rules *first* because they are computationally cheap and incredibly fast. If an IP is obviously spoofed, we drop it instantly without wasting CPU cycles. We only use the Stateful engine for packets that pass the initial stateless "sanity check," preserving system resources.
 
 ---
 
-## The Packet Lifecycle & Architecture
+### The Architecture: Kernel Space vs. User Space
 
-When a packet arrives at a socket, it travels through the following firewall pipeline:
+**1. Kernel Space: Packet Interception**
 
-1. **Packet Interception (Kernel Space):** The firewall catches the packet using Netfilter hooks.
-2. **Packet Parsing:** Extracts the Ethernet Header, IP Header, and Transport Layer Header.
-3. **Stateless Rule Application:** Initial stateless rules are evaluated (e.g., dropping obvious spoofed IPs).
-4. **Stateful Engine (Connection Tracking):** Acts as a smart bouncer. It identifies conversations using a 5-tuple fingerprint (Source IP, Dest IP, Source Port, Dest Port, Protocol).
-* Stores fingerprints for new conversations.
-* Allows free communication for established conversations.
-* Closes tracked conversations upon completion.
+* Intercept a packet.
+* Unpack its details and print it to the kernel log (`dmesg`).
+* Netfilter Hooks / eBPF XDP Hooks.
+
+> **WHY we do this in Kernel Space:** Speed and interception. We *must* catch the packet at "Ring 0" (Kernel Space) the millisecond it hits the network card, *before* the operating system routes it to an application. If we wait for the packet to reach User Space, it's already too late.
+
+**2. User Space: CLI tool for rule management of packets**
+
+* Create a HashMap to store rules for packets.
+* Move them from user space to kernel space.
+* Netlink Sockets or eBPF Maps.
+
+> **WHY we split rule management into User Space:** Stability. Kernel Space is dangerous; a single crash there triggers a Kernel Panic and freezes the whole computer. By keeping the heavy logic (parsing user input, reading config files, managing large HashMaps) in standard User Space, we ensure that if our CLI tool crashes, the operating system remains perfectly stable.
+
+---
+
+### The Packet Lifecycle & Execution
+
+1. **Packet Arrives at a socket** -> **Packet is parsed of its headers**
+2. **Stateless rules are applied** (Could eject packet)
+3. **Stateful Engine works** (conversation tracking)
+4. **Stateless fallback:** If new connection, match the new connection through a HashMap of rules.
+
+**Packet Execution:**
+
+* `NF_ACCEPT`: Continue transmission
+* `NF_DROP`: Discard
+* `NF_QUEUE`: Send to User Space for further inspection
+
+> **WHY parsing is strictly header-based (L3/L4):** We are building a Network/Transport layer firewall. Parsing only the Ethernet, IP, and TCP/UDP headers is extremely fast. We do not look at the actual payload (the website data or file contents) because doing Deep Packet Inspection (DPI) in the kernel would slow network traffic to a crawl.
+
+---
+
+### Connection Tracking (Conversation Tracker)
+
+* *A "connection" is purely a logical concept—it is a shared agreement and shared memory between two computers.*
+* Acts as a very smart Bouncer to prevent random access to the network.
+* Identifies conversations using a fingerprint: **5-tuple = Src IP | Dest IP | Src Port | Dest Port | Protocol**.
+* Stores this conversation fingerprint for `NEW` conversations, allows free communication for `ESTABLISHED` conversations, and closes them via `FIN` packets.
+
+> **WHY Connection Tracking is mandatory:** Without it, you cannot safely browse the internet. If you send a request to a website, the website *must* send data back. A stateless firewall would block that returning data because it is "incoming traffic." Connection tracking remembers your outgoing request and dynamically punches a temporary hole in the firewall to let the returning data in.
+
+---
+
+### Types of Attacks and How to Protect
+
+1. **SYN Floods (A type of DDoS)**
+* **The Attack:** Attacker sends thousands of TCP `SYN` packets but never completes the handshake, exhausting server RAM.
+* **The Defense:** Stateful firewall tracks half-open connections and enforces Rate Limiting. Drops excess.
 
 
-5. **Stateless Fallback:** If the stateful engine identifies a brand-new connection, it falls back to matching the headers against a HashMap of rules.
-6. **Packet Execution:** Returns a final verdict:
-* `NF_ACCEPT`: Continue transmission.
-* `NF_DROP`: Silently discard.
-* `NF_QUEUE`: Send to User Space for further inspection.
+2. **Port Scanning**
+* **The Attack:** Attackers use Nmap to systematically ping ports to find vulnerable services.
+* **The Defense:** "Default deny" policy. Silently `DROP` packets instead of sending `REJECT`.
+* **WHY drop instead of reject:** Sending a "Connection Refused" (`REJECT`) packet confirms to the hacker that your machine exists and is actively blocking them. Silently dropping the packet makes your machine look like a black hole, forcing their scanner to wait for a timeout and significantly slowing down their attack.
+
+
+3. **IP Spoofing**
+* **The Attack:** Attacker modifies the header to fake a trusted internal Source IP.
+* **The Defense:** Ingress/Egress Filtering. Drop external packets claiming an internal IP.
 
 
 
 ---
 
-## Rule Management (User Space)
+### How to Build Using Rust (eBPF & Aya Framework)
 
-To manage the firewall dynamically without recompiling the kernel:
+**Prerequisites for Dev:**
 
-* **CLI Tool:** A user-space application parses user commands.
-* **Storage:** Creates a HashMap to store the requested packet rules.
-* **Transfer:** Moves rules from user space to kernel space using Netlink Sockets or a character device interface.
+* **Virtual Machine (QEMU / KVM):**
+* **WHY:** Writing low-level network hooks can easily severe your own internet connection or crash your OS. KVM allows you to run a safe, disposable target machine with near-native CPU speeds, keeping your host system perfectly safe.
 
----
 
-## Common Network Attacks & Defenses
+* **Kernel 6.1 or newer:**
+* **WHY:** Kernel 6.1 introduced stable support for BTF (BPF Type Format). BTF allows your compiled firewall to understand the memory layout of *any* modern Linux kernel, meaning you compile it once, and it runs anywhere without breaking.
 
-| Attack Type | The Attack | The Defense |
-| --- | --- | --- |
-| **SYN Floods (DDoS)** | Attacker sends thousands of TCP `SYN` packets without completing the handshake, exhausting server RAM. | Stateful firewall tracks half-open connections and enforces **Rate Limiting** (e.g., max 20 SYN packets/sec per IP). |
-| **Port Scanning** | Attacker pings multiple ports (via Nmap) to find vulnerable services (SSH, HTTP). | **Default Deny Policy**. Silently `DROP` packets for unlisted ports instead of sending `REJECT`, slowing the attacker. |
-| **IP Spoofing** | Attacker modifies the header to fake a trusted internal Source IP (e.g., 192.168.1.50) from the outside. | **Ingress/Egress Filtering**. Strict stateless rule to drop external packets claiming an internal IP. |
 
----
+* **Toolchain (Rust Nightly, LLVM & Clang):**
+* **WHY Nightly:** Compiling code for the abstract eBPF virtual machine (the `bpfel-unknown-none` target) is still experimental in Rust. You must use the Nightly compiler to unlock this specific target architecture.
 
-## Development Setup: Rust & eBPF (Aya Framework)
 
-**System Prerequisites**
 
-* Set up a Virtual Machine using **QEMU** (Quick Emulator) and **KVM** (Kernel-based Virtual Machine).
-* Choose a Linux distribution running **Kernel 6.1 or newer** (ensures stable eBPF features and Rust support).
-* Install the Toolchain: Rust **Nightly**, LLVM & Clang, `bpf-linker`, and `bpftool`.
+**Crates to be Used:**
 
-### Required Dependencies (Crates)
-
-Because of the strict boundary between Ring 0 and Ring 3, the project requires two distinct environments.
-
-| Environment | Characteristics | Required Crates |
-| --- | --- | --- |
-| **Kernel Space (eBPF)** | Restricted. Only core functionality enabled. No standard library (`no_std` enabled, meaning no standard `Vec`, `Stack`, `Map`, etc.). | `aya-ebpf` (hook interaction & HashMaps), `network-types` (safe Rust network headers), `aya-log-ebpf` (kernel-to-user logging). |
-| **User Space (CLI)** | Unrestricted. Everything allowed. Full standard library access. | `aya` (eBPF loader), `tokio` (async runtime), `clap` (CLI command creation), `anyhow` (error handling), `aya-log` (catches kernel logs). |
+| Environment | Constraints | Crates | WHY these specific crates? |
+| --- | --- | --- | --- |
+| **Kernel Space (eBPF)** | Restricted. `no_std` (No Standard Lib, no `Vec`, no standard heap). | `aya-ebpf`, `network-types`, `aya-log-ebpf` | **WHY:** Because the kernel lacks a standard memory allocator, we cannot use standard Rust types. `network-types` gives us memory-safe representations of C-style network headers, and `aya-ebpf` is specifically written to compile into bare-metal eBPF bytecode. |
+| **User Space (CLI)** | Unrestricted. Everything allowed. | `aya`, `tokio`, `clap`, `anyhow`, `aya-log` | **WHY:** `clap` is the industry standard for parsing terminal commands. We need `tokio` (an async runtime) because our CLI program needs to sleep in the background, listening for incoming logs from the kernel or waiting for the user to press `Ctrl+C` to cleanly detach the firewall. |
 
 ---
