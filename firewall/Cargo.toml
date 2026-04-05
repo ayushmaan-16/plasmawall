@@ -1,5 +1,5 @@
 [package]
-name = "firewall"
+name = "plasma"
 version = "0.1.0"
 edition.workspace = true
 
@@ -7,6 +7,7 @@ license.workspace = true
 
 [dependencies]
 firewall-common = { path = "../firewall-common", features = ["user"] }
+bytes = "1"
 
 anyhow = { workspace = true, default-features = true }
 aya = { workspace = true }
@@ -20,6 +21,7 @@ tokio = { workspace = true, features = [
     "rt-multi-thread",
     "net",
     "signal",
+    "time",
 ] }
 clap = { workspace = true, features = ["derive"] }
 [build-dependencies]
@@ -41,5 +43,5 @@ cargo_metadata = { workspace = true }
 firewall-ebpf = { path = "../firewall-ebpf" }
 
 [[bin]]
-name = "firewall"
+name = "plasma"
 path = "src/main.rs"

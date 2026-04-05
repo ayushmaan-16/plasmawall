@@ -1,26 +1,81 @@
-Follow-up direction for next steps:
+# PlasmaWall — Linux eBPF Firewall
 
-This initial setup the base XDP program and loader using Aya. The next step is to implement a stateless ruleset.
+PlasmaWall is a high-performance, stateless Linux firewall built using eBPF and XDP. It provides a fast and efficient way to drop or allow network packets directly at the network interface level.
 
-The intended design is:
+## Features
+- **XDP-Based Dropping**: Extremely low overhead by dropping packets as soon as they hit the driver.
+- **Persistent State**: Blocked IPs and rules survive system reboots and firewall restarts.
+- **Offline Mode**: Manage your blocklist even when the firewall is inactive.
+- **Live Logging**: Real-time event streaming of dropped packets per CPU core.
 
-- Rule storage should be implemented using eBPF maps in `firewall-ebpf` (kernel space).
-- Packet filtering logic should live inside `try_firewall`, where packets are parsed and matched against rules.
-- Rules should NOT be hardcoded in the kernel program. They must be inserted/updated from user space.
+## Prerequisites
+- **OS**: Linux (Fedora/Ubuntu/Debian recommended).
+- **Tooling**: `clang`, `llvm`, `libelf-dev` (or `elfutils-libelf-devel`), and `bpf-linker`.
+- **Rust**: Nightly toolchain is automatically handled via `rust-toolchain.toml`.
 
-Suggested flow:
-User space (loader / future CLI) → updates eBPF maps → kernel (XDP program) reads maps → decides PASS/DROP.
+## Installation
 
-Recommended breakdown:
-1. Define a shared `Rule` struct in `firewall-common`.
-2. Add a HashMap in `firewall-ebpf` to store rules.
-3. Parse packet headers in `try_firewall` (IP, protocol, port).
-4. Perform O(1) lookup in the map and return XDP_PASS / XDP_DROP accordingly.
-5. Extend the loader to populate/update rules (CLI can be added later).
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/ayushmaan-16/plasmawall.git
+   cd plasmawall/firewall
+   ```
 
-Important constraints:
-- Keep logic simple (no loops, no complex branching).
-- Do not move filtering logic into user space.
-- Maintain separation between user-space (`firewall`) and kernel (`firewall-ebpf`) crates.
+2. **Build the project**:
+   ```bash
+   cargo build --release
+   ```
 
-this is design aligned with Aya’s model and allows easy extension to CLI + dynamic rule management later.
+3. **Install the CLI globally**:
+   ```bash
+   sudo cp ../target/release/firewall /usr/local/bin/plasma
+   ```
+
+## Usage Guide
+
+To use the firewall correctly, follow this standard workflow:
+
+### 1. View Current Status
+Check if the firewall is active or inactive.
+```bash
+sudo plasma status
+```
+
+### 2. Manage the Blocklist (Offline or Online)
+You can add or remove IPs at any time. If the firewall is stopped, the changes are saved to `/etc/plasmawall/blocklist.txt` and will be loaded when you start the firewall.
+```bash
+# Block an IP
+sudo plasma block 8.8.8.8
+
+# List currently blocked IPs
+sudo plasma list
+
+# Unblock an IP
+sudo plasma unblock 8.8.8.8
+```
+
+### 3. Start the Firewall
+Activate the firewall on a specific network interface (e.g., `enp1s0`, `eth0`).
+```bash
+sudo plasma start --iface enp1s0
+```
+
+### 4. Monitor Live Logs
+In a separate terminal, watch packet drops as they happen in real-time.
+```bash
+sudo plasma log
+```
+
+### 5. Stop the Firewall
+Gracefully detach the XDP program and clean up kernel resources.
+```bash
+sudo plasma stop
+```
+
+---
+
+## Roadmap: Stateless Ruleset
+We are currently moving towards a more granular **Stateless Ruleset** system. This version will support:
+- Port-based filtering (TCP/UDP/ICMP).
+- Comprehensive rule matching (Source IP + Destination IP + Port + Protocol).
+- Granular rule management via the `plasma` CLI.

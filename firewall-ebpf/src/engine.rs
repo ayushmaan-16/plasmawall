@@ -1,7 +1,6 @@
 use aya_ebpf::bindings::xdp_action;
 use aya_ebpf::programs::XdpContext;
 use aya_ebpf::maps::{HashMap, Array, PerfEventArray};
-use aya_log_ebpf::info;
 
 use crate::packet::{EthernetHeader, Ipv4Header, ptr_at, ParseError};
 
@@ -52,10 +51,8 @@ pub fn evaluate_packet(
                 _padding: 0,
             };
 
-            events.output(context, &log, 0);
+            events.output(context, &log, 0xffffffff);
 
-            // TODO: remove info!() when event catching in firewall crate is implemented
-            info!(context, "Dropped: Global DROP ALL is active!");
             return Ok(xdp_action::XDP_DROP);
         }
     }
@@ -75,16 +72,13 @@ pub fn evaluate_packet(
                 _padding: 0,
             };
 
-            events.output(context, &log, 0);
+            events.output(context, &log, 0xffffffff);
             
-            // TODO: remove info!() when event catching in firewall crate is implemented
-            info!(context, "Dropped packet from blocked IP!");
             return Ok(xdp_action::XDP_DROP);
         }
     }
 
     
     
-    info!(context, "Packet passed");
     Ok(xdp_action::XDP_PASS)
 }

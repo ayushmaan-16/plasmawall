@@ -3,6 +3,15 @@
 version = 4
 
 [[package]]
+name = "aho-corasick"
+version = "1.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ddd31a130427c27518df266943a5308ed92d4b226cc639f5a8f1002816174301"
+dependencies = [
+ "memchr",
+]
+
+[[package]]
 name = "anstyle"
 version = "1.0.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -23,7 +32,7 @@ checksum = "9b34d609dfbaf33d6889b2b7106d3ca345eacad44200913df5ba02bfd31d2ba9"
 [[package]]
 name = "aya"
 version = "0.13.2"
-source = "git+https://github.com/aya-rs/aya#3992977502f703a4de860d1b963ab1550bd45c34"
+source = "git+https://github.com/aya-rs/aya?rev=2ed35314#2ed3531463d4d7ece84b973f0521d954c629191d"
 dependencies = [
  "assert_matches",
  "aya-obj",
@@ -40,7 +49,7 @@ dependencies = [
 [[package]]
 name = "aya-build"
 version = "0.1.3"
-source = "git+https://github.com/aya-rs/aya#3992977502f703a4de860d1b963ab1550bd45c34"
+source = "git+https://github.com/aya-rs/aya?rev=2ed35314#2ed3531463d4d7ece84b973f0521d954c629191d"
 dependencies = [
  "anyhow",
  "cargo_metadata",
@@ -51,7 +60,7 @@ dependencies = [
 [[package]]
 name = "aya-ebpf"
 version = "0.1.2"
-source = "git+https://github.com/aya-rs/aya#3992977502f703a4de860d1b963ab1550bd45c34"
+source = "git+https://github.com/aya-rs/aya?rev=2ed35314#2ed3531463d4d7ece84b973f0521d954c629191d"
 dependencies = [
  "aya-build",
  "aya-ebpf-bindings",
@@ -63,7 +72,7 @@ dependencies = [
 [[package]]
 name = "aya-ebpf-bindings"
 version = "0.1.2"
-source = "git+https://github.com/aya-rs/aya#3992977502f703a4de860d1b963ab1550bd45c34"
+source = "git+https://github.com/aya-rs/aya?rev=2ed35314#2ed3531463d4d7ece84b973f0521d954c629191d"
 dependencies = [
  "aya-build",
  "aya-ebpf-cty",
@@ -72,7 +81,7 @@ dependencies = [
 [[package]]
 name = "aya-ebpf-cty"
 version = "0.2.3"
-source = "git+https://github.com/aya-rs/aya#3992977502f703a4de860d1b963ab1550bd45c34"
+source = "git+https://github.com/aya-rs/aya?rev=2ed35314#2ed3531463d4d7ece84b973f0521d954c629191d"
 dependencies = [
  "aya-build",
 ]
@@ -80,7 +89,7 @@ dependencies = [
 [[package]]
 name = "aya-ebpf-macros"
 version = "0.1.2"
-source = "git+https://github.com/aya-rs/aya#3992977502f703a4de860d1b963ab1550bd45c34"
+source = "git+https://github.com/aya-rs/aya?rev=2ed35314#2ed3531463d4d7ece84b973f0521d954c629191d"
 dependencies = [
  "proc-macro2",
  "proc-macro2-diagnostics",
@@ -91,7 +100,7 @@ dependencies = [
 [[package]]
 name = "aya-log"
 version = "0.2.2"
-source = "git+https://github.com/aya-rs/aya#3992977502f703a4de860d1b963ab1550bd45c34"
+source = "git+https://github.com/aya-rs/aya?rev=2ed35314#2ed3531463d4d7ece84b973f0521d954c629191d"
 dependencies = [
  "aya",
  "aya-log-common",
@@ -102,7 +111,7 @@ dependencies = [
 [[package]]
 name = "aya-log-common"
 version = "0.1.16"
-source = "git+https://github.com/aya-rs/aya#3992977502f703a4de860d1b963ab1550bd45c34"
+source = "git+https://github.com/aya-rs/aya?rev=2ed35314#2ed3531463d4d7ece84b973f0521d954c629191d"
 dependencies = [
  "num_enum",
 ]
@@ -110,7 +119,7 @@ dependencies = [
 [[package]]
 name = "aya-log-ebpf"
 version = "0.1.2"
-source = "git+https://github.com/aya-rs/aya#3992977502f703a4de860d1b963ab1550bd45c34"
+source = "git+https://github.com/aya-rs/aya?rev=2ed35314#2ed3531463d4d7ece84b973f0521d954c629191d"
 dependencies = [
  "aya-ebpf",
  "aya-log-common",
@@ -120,7 +129,7 @@ dependencies = [
 [[package]]
 name = "aya-log-ebpf-macros"
 version = "0.1.1"
-source = "git+https://github.com/aya-rs/aya#3992977502f703a4de860d1b963ab1550bd45c34"
+source = "git+https://github.com/aya-rs/aya?rev=2ed35314#2ed3531463d4d7ece84b973f0521d954c629191d"
 dependencies = [
  "aya-log-common",
  "aya-log-parser",
@@ -132,7 +141,7 @@ dependencies = [
 [[package]]
 name = "aya-log-parser"
 version = "0.1.14"
-source = "git+https://github.com/aya-rs/aya#3992977502f703a4de860d1b963ab1550bd45c34"
+source = "git+https://github.com/aya-rs/aya?rev=2ed35314#2ed3531463d4d7ece84b973f0521d954c629191d"
 dependencies = [
  "aya-log-common",
 ]
@@ -140,7 +149,7 @@ dependencies = [
 [[package]]
 name = "aya-obj"
 version = "0.2.2"
-source = "git+https://github.com/aya-rs/aya#3992977502f703a4de860d1b963ab1550bd45c34"
+source = "git+https://github.com/aya-rs/aya?rev=2ed35314#2ed3531463d4d7ece84b973f0521d954c629191d"
 dependencies = [
  "bytes",
  "hashbrown",
@@ -289,24 +298,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "firewall"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "aya",
- "aya-build",
- "aya-log",
- "cargo_metadata",
- "clap",
- "env_logger",
- "firewall-common",
- "firewall-ebpf",
- "libc",
- "log",
- "tokio",
-]
-
-[[package]]
 name = "firewall-common"
 version = "0.1.0"
 dependencies = [
@@ -356,9 +347,9 @@ dependencies = [
 
 [[package]]
 name = "indexmap"
-version = "2.13.0"
+version = "2.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7714e70437a7dc3ac8eb7e6f8df75fd8eb422675fc7678aff7364301092b1017"
+checksum = "45a8a2b9cb3e0b0c1803dbb0758ffac5de2f425b23c28f518faabd9d805342ff"
 dependencies = [
  "equivalent",
  "hashbrown",
@@ -372,9 +363,9 @@ checksum = "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682"
 
 [[package]]
 name = "libc"
-version = "0.2.183"
+version = "0.2.184"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b5b646652bf6661599e1da8901b3b9522896f01e736bad5f723fe7a3a27f899d"
+checksum = "48f5d2a454e16a5ea0f4ced81bd44e4cfc7bd3a507b61887c99fd3538b28e4af"
 
 [[package]]
 name = "linux-raw-sys"
@@ -451,6 +442,25 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a89322df9ebe1c1578d689c92318e070967d1042b512afbe49518723f4e6d5cd"
 
 [[package]]
+name = "plasma"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "aya",
+ "aya-build",
+ "aya-log",
+ "bytes",
+ "cargo_metadata",
+ "clap",
+ "env_logger",
+ "firewall-common",
+ "firewall-ebpf",
+ "libc",
+ "log",
+ "tokio",
+]
+
+[[package]]
 name = "proc-macro2"
 version = "1.0.106"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -479,6 +489,35 @@ checksum = "41f2619966050689382d2b44f664f4bc593e129785a36d6ee376ddf37259b924"
 dependencies = [
  "proc-macro2",
 ]
+
+[[package]]
+name = "regex"
+version = "1.12.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e10754a14b9137dd7b1e3e5b0493cc9171fdd105e0ab477f51b72e7f3ac0e276"
+dependencies = [
+ "aho-corasick",
+ "memchr",
+ "regex-automata",
+ "regex-syntax",
+]
+
+[[package]]
+name = "regex-automata"
+version = "0.4.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6e1dd4122fc1595e8162618945476892eefca7b88c52820e74af6262213cae8f"
+dependencies = [
+ "aho-corasick",
+ "memchr",
+ "regex-syntax",
+]
+
+[[package]]
+name = "regex-syntax"
+version = "0.8.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dc897dd8d9e8bd1ed8cdad82b5966c3e0ecae09fb1907d58efaa013543185d0a"
 
 [[package]]
 name = "rustc_version"
@@ -510,9 +549,9 @@ checksum = "b39cdef0fa800fc44525c84ccb54a029961a8215f9619753635a9c0d2538d46d"
 
 [[package]]
 name = "semver"
-version = "1.0.27"
+version = "1.0.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d767eb0aabc880b29956c35734170f26ed551a859dbd361d140cdbeca61ab1e2"
+checksum = "8a7852d02fc848982e0c167ef163aaff9cd91dc640ba85e263cb1ce46fae51cd"
 dependencies = [
  "serde",
  "serde_core",
@@ -614,9 +653,9 @@ dependencies = [
 
 [[package]]
 name = "tokio"
-version = "1.50.0"
+version = "1.51.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "27ad5e34374e03cfffefc301becb44e9dc3c17584f414349ebe29ed26661822d"
+checksum = "2bd1c4c0fc4a7ab90fc15ef6daaa3ec3b893f004f915f2392557ed23237820cd"
 dependencies = [
  "libc",
  "mio",
@@ -629,9 +668,9 @@ dependencies = [
 
 [[package]]
 name = "tokio-macros"
-version = "2.6.1"
+version = "2.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5c55a2eff8b69ce66c84f85e1da1c233edc36ceb85a2058d11b0d6a3c7e7569c"
+checksum = "385a6cb71ab9ab790c5fe8d67f1645e6c450a7ce006a33de03daa956cf70a496"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -664,6 +703,7 @@ checksum = "b4ee928febd44d98f2f459a4a79bd4d928591333a494a10a868418ac1b39cf1f"
 dependencies = [
  "either",
  "home",
+ "regex",
  "rustix",
  "winsafe",
 ]

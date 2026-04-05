@@ -7,8 +7,11 @@ pub struct PacketLog {
     pub destination_ip: u32,
     pub action: u8,
     pub reason: u8,
-    pub _padding: u16, // Padding to ensure the struct is evenly aligned (4 + 4 + 1 + 1 + 2 = 12 bytes)
+    pub _padding: u16,
 }
+
+#[cfg(feature = "user")]
+unsafe impl aya::Pod for PacketLog {}
 
 pub const ACTION_PASS: u8 = 0;
 pub const ACTION_DROP: u8 = 1;
