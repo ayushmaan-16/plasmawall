@@ -1,0 +1,13 @@
+    Updating crates.io index
+error: failed to select a version for `aya-log`.
+    ... required by package `plasma v0.1.0 (/home/ayushmaansharma/Downloads/plasmawall/firewall)`
+versions that meet the requirements `^0.1` are: 0.1.13, 0.1.11, 0.1.10, 0.1.9, 0.1.7, 0.1.1
+
+all possible versions conflict with previously selected packages
+
+  previously selected package `aya-log-common v0.1.14`
+    ... which satisfies dependency `aya-log-common = "^0.1.14"` of package `aya-log-ebpf v0.1.0`
+    ... which satisfies dependency `aya-log-ebpf = "^0.1.0"` of package `firewall-ebpf v0.1.0 (/home/ayushmaansharma/Downloads/plasmawall/firewall-ebpf)`
+    ... which satisfies path dependency `firewall-ebpf` of package `plasma v0.1.0 (/home/ayushmaansharma/Downloads/plasmawall/firewall)`
+
+failed to select a version for `aya-log` which could resolve this conflict
